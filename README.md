@@ -1,6 +1,6 @@
 # 🧻 devslog - Go [slog.Handler](https://pkg.go.dev/log/slog#Handler) for development
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/golang-cz/devslog/blob/master/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/monetr/devslog/blob/main/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/monetr/devslog)](https://goreportcard.com/report/github.com/monetr/devslog)
 [![Go Reference](https://pkg.go.dev/badge/github.com/monetr/devslog.svg)](https://pkg.go.dev/github.com/monetr/devslog)
 
