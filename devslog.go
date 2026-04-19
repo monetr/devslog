@@ -67,6 +67,12 @@ type Options struct {
 
 	// Keep same color for whole source info, helpful when you want to open the line of code from terminal, but the ANSI coloring codes are in link itself
 	SameSourceInfoColor bool
+
+	// Deduplicate top-level attributes by key. When multiple attributes share the
+	// same key at the top level, only the first occurrence is kept. Record
+	// attributes (from the log call) take precedence over attributes added with
+	// WithAttrs, and more recent WithAttrs calls take precedence over older ones.
+	DedupAttributes bool
 }
 
 type groupOrAttrs struct {
@@ -277,6 +283,19 @@ func (h *developHandler) processAttributes(b []byte, r *slog.Record) []byte {
 		} else {
 			as = append(as, goas[i].attrs...)
 		}
+	}
+
+	if h.opts.DedupAttributes && len(as) > 1 {
+		seen := make(map[string]struct{}, len(as))
+		deduped := as[:0]
+		for _, a := range as {
+			if _, ok := seen[a.Key]; ok {
+				continue
+			}
+			seen[a.Key] = struct{}{}
+			deduped = append(deduped, a)
+		}
+		as = deduped
 	}
 
 	vi := make(visited)

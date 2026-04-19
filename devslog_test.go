@@ -38,6 +38,8 @@ func TestGroupsAndAttributes(t *testing.T) {
 	testWithGroupsEmpty(t)
 	testWithAttributes(t)
 	testWithAttributesRaceCondition()
+	testDedupAttributes(t)
+	testDedupAttributesPreservesUniqueKeys(t)
 }
 
 func TestSourceAndReplace(t *testing.T) {
@@ -991,6 +993,53 @@ func testSameSourceInfoColor(t *testing.T) {
 	)
 
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func testDedupAttributes(t *testing.T) {
+	w := &MockWriter{}
+
+	opts := &Options{
+		HandlerOptions:  &slog.HandlerOptions{Level: slog.LevelDebug},
+		TimeFormat:      "[]",
+		NoColor:         true,
+		DedupAttributes: true,
+	}
+
+	logger := slog.New(NewHandler(w, opts)).
+		With("a", "with-old").
+		With("a", "with-new", "b", "only-with")
+
+	logger.Info("msg",
+		slog.String("a", "record"),
+		slog.String("c", "only-record"),
+		slog.String("c", "duplicate-in-call"),
+	)
+
+	expected := []byte("[]  INFO  msg\n  a: record\n  c: only-record\n  b: only-with\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func testDedupAttributesPreservesUniqueKeys(t *testing.T) {
+	w := &MockWriter{}
+
+	opts := &Options{
+		HandlerOptions:  &slog.HandlerOptions{Level: slog.LevelDebug},
+		TimeFormat:      "[]",
+		NoColor:         true,
+		DedupAttributes: true,
+	}
+
+	logger := slog.New(NewHandler(w, opts)).With("a", "1")
+	logger.Info("msg", slog.String("b", "2"), slog.String("c", "3"))
+
+	expected := []byte("[]  INFO  msg\n  b: 2\n  c: 3\n  a: 1\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
 	}
 }
