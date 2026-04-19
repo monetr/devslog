@@ -338,13 +338,21 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, group []string
 
 			if t, ok := av.(*time.Time); ok {
 				mark = h.colorString([]byte("@"), fgCyan)
-				val = h.colorString([]byte(t.String()), fgCyan)
+				if t == nil {
+					val = h.nilString()
+				} else {
+					val = h.colorString([]byte(t.String()), fgCyan)
+				}
 				break
 			}
 
 			if d, ok := av.(*time.Duration); ok {
 				mark = h.colorString([]byte("@"), fgCyan)
-				val = h.colorString([]byte(d.String()), fgCyan)
+				if d == nil {
+					val = h.nilString()
+				} else {
+					val = h.colorString([]byte(d.String()), fgCyan)
+				}
 				break
 			}
 
@@ -605,7 +613,7 @@ func (h *developHandler) formatStruct(st reflect.Type, sv reflect.Value, l int, 
 	return b
 }
 
-var marshalTextInterface = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
+var marshalTextInterface = reflect.TypeFor[encoding.TextMarshaler]()
 
 func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p int, vi visited) (b []byte) {
 	if t.Implements(marshalTextInterface) {
