@@ -1,8 +1,10 @@
 # 🧻 devslog - Go [slog.Handler](https://pkg.go.dev/log/slog#Handler) for development
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/golang-cz/devslog/blob/master/LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/golang-cz/devslog)](https://goreportcard.com/report/github.com/golang-cz/devslog)
-[![Go Reference](https://pkg.go.dev/badge/github.com/golang-cz/devslog.svg)](https://pkg.go.dev/github.com/golang-cz/devslog)
+[![Go Report Card](https://goreportcard.com/badge/github.com/monetr/devslog)](https://goreportcard.com/report/github.com/monetr/devslog)
+[![Go Reference](https://pkg.go.dev/badge/github.com/monetr/devslog.svg)](https://pkg.go.dev/github.com/monetr/devslog)
+
+This is a fork of https://github.com/golang-cz/devslog
 
 `devslog` is a zero dependency structured logging handler for Go's [`log/slog`](https://pkg.go.dev/log/slog) package with pretty and colorful output for developers.
 
@@ -21,7 +23,7 @@
 ## Install
 
 ```
-go get github.com/golang-cz/devslog@latest
+go get github.com/monetr/devslog@latest
 ```
 
 ## Examples
