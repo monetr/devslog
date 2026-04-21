@@ -382,7 +382,12 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, group []string
 
 			if h.opts.StringerFormatter {
 				if stringer, ok := av.(fmt.Stringer); ok {
-					val = []byte(stringer.String())
+					rv := reflect.ValueOf(av)
+					if rv.Kind() == reflect.Pointer && rv.IsNil() {
+						val = h.nilString()
+					} else {
+						val = []byte(stringer.String())
+					}
 					break
 				}
 			}
@@ -641,6 +646,9 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p i
 
 	if h.opts.StringerFormatter {
 		if stringer, ok := v.Interface().(fmt.Stringer); ok {
+			if v.Kind() == reflect.Pointer && v.IsNil() {
+				return h.nilString()
+			}
 			return []byte(stringer.String())
 		}
 	}
@@ -773,6 +781,9 @@ func (h *developHandler) structKeyPadding(sv reflect.Value, fgColor *foregroundC
 
 func (h *developHandler) reducePointerValue(v reflect.Value) reflect.Value {
 	for v.Kind() == reflect.Pointer {
+		if v.IsNil() {
+			return v
+		}
 		v = v.Elem()
 	}
 

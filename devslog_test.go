@@ -80,6 +80,11 @@ func TestTypes(t *testing.T) {
 	testLogValuerPanic(t, opts)
 	testStringer(t, opts)
 	testStringerInner(t, opts)
+	testStringerNilPointer(t, opts)
+	testStringerNonNilPointer(t, opts)
+	testStringerNilInSlice(t, opts)
+	testStringerNilInStruct(t, opts)
+	testStringerNilInMap(t, opts)
 	testNoColor(t, opts)
 	testInfinite(t, opts)
 	testSameSourceInfoColor(t)
@@ -909,6 +914,100 @@ func testStringerInner(t *testing.T, o *Options) {
 	expected := []byte(
 		"\x1b[2m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mtest_stringer_inner\x1b[0m\n\x1b[33mS\x1b[0m \x1b[35mitem1\x1b[0m: \x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33mS\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\x1b[33me\x1b[0m\x1b[33mr\x1b[0m\x1b[33mE\x1b[0m\x1b[33mx\x1b[0m\x1b[33ma\x1b[0m\x1b[33mm\x1b[0m\x1b[33mp\x1b[0m\x1b[33ml\x1b[0m\x1b[33me\x1b[0m\x1b[33m2\x1b[0m\n    \x1b[32mInner\x1b[0m: A: test\n    \x1b[32mOther\x1b[0m: \x1b[33m42\x1b[0m\n\n",
 	)
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+type logStringerPtrExample struct{ X int }
+
+func (s *logStringerPtrExample) String() string {
+	return fmt.Sprintf("x=%d", s.X)
+}
+
+type logStringerPtrHolder struct {
+	Thing *logStringerPtrExample
+	Other int
+}
+
+func testStringerNilPointer(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	var thing *logStringerPtrExample
+	logger.Info("test_stringer_nil_pointer",
+		slog.Any("thing", thing),
+	)
+
+	expected := []byte("\x1b[2m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mtest_stringer_nil_pointer\x1b[0m\n  \x1b[35mthing\x1b[0m: \x1b[31m<\x1b[0m\x1b[33mnil\x1b[0m\x1b[31m>\x1b[0m\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func testStringerNonNilPointer(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	thing := &logStringerPtrExample{X: 7}
+	logger.Info("test_stringer_non_nil_pointer",
+		slog.Any("thing", thing),
+	)
+
+	expected := []byte("\x1b[2m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mtest_stringer_non_nil_pointer\x1b[0m\n  \x1b[35mthing\x1b[0m: x=7\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func testStringerNilInSlice(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	things := []*logStringerPtrExample{nil, {X: 1}}
+	logger.Info("test_stringer_nil_in_slice",
+		slog.Any("things", things),
+	)
+
+	expected := []byte("\x1b[2m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mtest_stringer_nil_in_slice\x1b[0m\n\x1b[32mS\x1b[0m \x1b[35mthings\x1b[0m: \x1b[34m2\x1b[0m \x1b[32m[\x1b[0m\x1b[32m]\x1b[0m\x1b[31m*\x1b[0m\x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33mS\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\x1b[33me\x1b[0m\x1b[33mr\x1b[0m\x1b[33mP\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mE\x1b[0m\x1b[33mx\x1b[0m\x1b[33ma\x1b[0m\x1b[33mm\x1b[0m\x1b[33mp\x1b[0m\x1b[33ml\x1b[0m\x1b[33me\x1b[0m\n    \x1b[32m0\x1b[0m: \x1b[31m<\x1b[0m\x1b[33mnil\x1b[0m\x1b[31m>\x1b[0m\n    \x1b[32m1\x1b[0m: x=1\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func testStringerNilInStruct(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	holder := logStringerPtrHolder{
+		Thing: nil,
+		Other: 42,
+	}
+	logger.Info("test_stringer_nil_in_struct",
+		slog.Any("holder", holder),
+	)
+
+	expected := []byte("\x1b[2m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mtest_stringer_nil_in_struct\x1b[0m\n\x1b[33mS\x1b[0m \x1b[35mholder\x1b[0m: \x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33mS\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\x1b[33me\x1b[0m\x1b[33mr\x1b[0m\x1b[33mP\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mH\x1b[0m\x1b[33mo\x1b[0m\x1b[33ml\x1b[0m\x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mr\x1b[0m\n    \x1b[32mThing\x1b[0m: \x1b[31m<\x1b[0m\x1b[33mnil\x1b[0m\x1b[31m>\x1b[0m\n    \x1b[32mOther\x1b[0m: \x1b[33m42\x1b[0m\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func testStringerNilInMap(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	m := map[string]*logStringerPtrExample{"k": nil}
+	logger.Info("test_stringer_nil_in_map",
+		slog.Any("m", m),
+	)
+
+	expected := []byte("\x1b[2m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mtest_stringer_nil_in_map\x1b[0m\n\x1b[32mM\x1b[0m \x1b[35mm\x1b[0m: \x1b[34m1\x1b[0m \x1b[33mm\x1b[0m\x1b[33ma\x1b[0m\x1b[33mp\x1b[0m\x1b[32m[\x1b[0m\x1b[33ms\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\x1b[32m]\x1b[0m\x1b[31m*\x1b[0m\x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33mS\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\x1b[33me\x1b[0m\x1b[33mr\x1b[0m\x1b[33mP\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mE\x1b[0m\x1b[33mx\x1b[0m\x1b[33ma\x1b[0m\x1b[33mm\x1b[0m\x1b[33mp\x1b[0m\x1b[33ml\x1b[0m\x1b[33me\x1b[0m\n    \x1b[32mk\x1b[0m: \x1b[31m<\x1b[0m\x1b[33mnil\x1b[0m\x1b[31m>\x1b[0m\n\n")
 
 	if !bytes.Equal(w.WrittenData, expected) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
