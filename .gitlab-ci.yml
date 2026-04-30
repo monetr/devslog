@@ -1,0 +1,37 @@
+stages:
+  - verify
+  - build
+  - test
+
+variables:
+  GOPATH: "$CI_PROJECT_DIR/.gopath"
+  GOCACHE: "$CI_PROJECT_DIR/.gocache"
+  GOFLAGS: "-mod=readonly"  
+
+default:
+  image: golang:1.26
+  before_script:
+    - go version
+    - mkdir -p .gocache .gopath/pkg/mod
+  cache:
+    key:
+      files:
+        - go.mod
+    paths:
+      - .gocache
+      - .gopath/pkg/mod
+
+vet:
+  stage: verify
+  script:
+    - go vet ./...
+
+build:
+  stage: build
+  script:
+    - go build ./...
+
+test:
+  stage: test
+  script:
+    - go test -race -count=1 -v ./...
